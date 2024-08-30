@@ -1,0 +1,34 @@
+version: '3'
+
+tasks:
+  check-installed:
+    internal: true
+    silent: true
+    vars:
+      exe_loc:
+        sh: type -p {{ .EXECUTABLE }} || true
+    generates:
+      - "{{ .XDG_CACHE_HOME}}/{{ OS }}/exe_{{ .EXECUTABLE }}"
+    cmds:
+      - cmd: false || "{{ and (or .exe_loc (fail (list "Need to install" .EXECUTABLE | join " "))) true }}"
+      - cmd: '{{ .MKDIR | replace "$1" (joinPath .XDG_CACHE_HOME OS) }}'
+      - cmd: echo "{{ shellQuote .exe_loc }}" > "{{ .XDG_CACHE_HOME }}/{{ OS }}/exe_{{ .EXECUTABLE }}"
+
+  powershell-installed:
+    desc: "Checks that Powershell Core is installed and available"
+    aliases: [ "pwsh" ]
+    silent: true
+    generates:
+      - "{{ .XDG_CACHE_HOME }}/{{ OS }}/exe_pwsh"
+    cmds:
+      - task: check-installed
+        vars:
+          EXECUTABLE: "pwsh"
+
+  dotnet-installed:
+    desc: "Checks that 'dotnet' is installed and available"
+    aliases: [ "dotnet" ]
+    cmds:
+      - task: check-installed
+        vars:
+          EXECUTABLE: "dotnet"

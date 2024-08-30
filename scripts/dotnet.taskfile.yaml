@@ -1,0 +1,63 @@
+version: '3'
+
+tasks:
+  build:
+    desc: "Build a .NET project."
+    vars:
+      DOTNET_EXE:
+        sh: 'task prereqs:dotnet && cat {{ shellQuote (joinPath .XDG_CACHE_HOME OS "exe_dotnet") }}'
+    cmds:
+      - cmd: '{{ .DOTNET_EXE }} {{ .SDK_OPTIONS }} build'
+
+  clean:
+    desc: "Clean build outputs of a .NET project."
+    vars:
+      DOTNET_EXE:
+        sh: 'task prereqs:dotnet && cat {{ shellQuote (joinPath .XDG_CACHE_HOME OS "exe_dotnet") }}'
+    cmds:
+      - cmd: '{{ .DOTNET_EXE }} {{ .SDK_OPTIONS }} clean'
+
+  format:
+    desc: "Apply style preferences to a project or solution."
+    vars:
+      DOTNET_EXE:
+        sh: 'task prereqs:dotnet && cat {{ shellQuote (joinPath .XDG_CACHE_HOME OS "exe_dotnet") }}'
+    cmds:
+      - cmd: '{{ .DOTNET_EXE }} {{ .SDK_OPTIONS }} format'
+
+  publish:
+    desc: "Publish a .NET project for deployment."
+    vars:
+      TARGET_FILE: '{{ coalesce .PROJECT .SOLUTION }}'
+      TARGET_FILE_PROVIDED: '{{ if .TARGET_FILE }}true{{ else }}{{ fail "Must provide either the PROJECT or SOLUTION variable" }}{{ end }}'
+      CONFIGURATION_OPTION: '{{ if .CONFIGURATION }}--configuration {{ .CONFIGURATION }}{{ else }}{{ end }}'
+      DOTNET_OPTIONS: '--nologo {{ .CONFIGURATION_OPTION }}'
+      DOTNET_EXE:
+        sh: 'task prereqs:dotnet && cat {{ shellQuote (joinPath .XDG_CACHE_HOME OS "exe_dotnet") }}'
+    cmds:
+      - cmd: '{{ .DOTNET_EXE }} publish {{ .TARGET_FILE }} {{ .DOTNET_OPTIONS }}'
+
+  restore:
+    desc: "Restore dependencies specified in a .NET project."
+    vars:
+      DOTNET_EXE:
+        sh: 'task prereqs:dotnet && cat {{ shellQuote (joinPath .XDG_CACHE_HOME OS "exe_dotnet") }}'
+    cmds:
+      - cmd: '{{ .DOTNET_EXE }} {{ .SDK_OPTIONS }} restore'
+
+  run:
+    desc: "Build and run a .NET project output."
+    vars:
+      DOTNET_EXE:
+        sh: 'task prereqs:dotnet && cat {{ shellQuote (joinPath .XDG_CACHE_HOME OS "exe_dotnet") }}'
+    cmds:
+      - cmd: '{{ .DOTNET_EXE }} {{ .SDK_OPTIONS }} run'
+
+  test:
+    desc: "Run unit tests using the test runner specified in a .NET project."
+    vars:
+      DOTNET_EXE:
+        sh: 'task prereqs:dotnet && cat {{ shellQuote (joinPath .XDG_CACHE_HOME OS "exe_dotnet") }}'
+    cmds:
+      - cmd: '{{ .DOTNET_EXE }} {{ .SDK_OPTIONS }} test'
+

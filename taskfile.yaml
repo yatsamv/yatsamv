@@ -1,0 +1,67 @@
+version: '3'
+
+output: "interleaved"
+method: "checksum"
+silent: false
+run: "always"
+set:
+  - errexit
+  - nounset
+#  - xtrace
+  - pipefail
+
+includes:
+  prereqs:
+    taskfile: ./scripts/prereqs.taskfile.yaml
+  dotnet:
+    taskfile: ./scripts/dotnet.taskfile.yaml
+
+vars:
+  REPO_DIR: "{{ .ROOT_DIR }}"
+  TASK_TEMP_DIR: ".task"
+  MKDIR: '{{ if (eq OS "windows") }}powershell -Command "mkdir -Path $1 -Force | Out-Null"{{ else }}mkdir -p $1{{ end }}'
+
+env:
+  APP_NAMESPACE: "tasks"
+  HOME: '{{ if (eq OS "windows") }}{{ .USERPROFILE }}{{ else }}{{ .HOME }}{{ end }}'
+  XDG_DATA_HOME: '{{ .XDG_DATA_HOME | default (joinPath .HOME ".local" "share" .APP_NAMESPACE) }}'
+  XDG_CONFIG_HOME: '{{ .XDG_CONFIG_HOME | default (joinPath .HOME ".config" .APP_NAMESPACE) }}'
+  XDG_STATE_HOME: '{{ .XDG_STATE_HOME | default (joinPath .HOME ".local/state" .APP_NAMESPACE) }}'
+  XDG_DATA_DIRS: '{{ .XDG_DATA_DIRS | default "/usr/local/share/:/usr/share/" }}'
+  XDG_CONFIG_DIRS: '{{ .XDG_CONFIG_DIRS | default "/etc/xdg" }}'
+  XDG_CACHE_HOME: '{{ .XDG_CACHE_HOME | default (joinPath .HOME ".cache" .APP_NAMESPACE) }}'
+  XDG_RUNTIME_DIR: '{{ .XDG_RUNTIME_DIR }}'
+  BUILD_CONFIGURATION: "Debug"
+
+dotenv:
+  - '.env'
+  - '{{.HOME}}/.env'
+
+tasks:
+  build:
+    desc: "Build all..."
+    cmds:
+      - task: dotnet:build
+        vars:
+          PROJECT: '.'
+          CONFIGURATION: '{{ .BUILD_CONFIGURATION }}'
+
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  lint:
+    desc: "Lint all..."
+    cmds:
+      - echo "linting..."
+
+  run:
+    desc: "Builds and runs the project"
+    cmds:
+      - task: dotnet:run
+
+  test:
+    desc: "Test all..."
+    cmds:
+      - task: dotnet:test
